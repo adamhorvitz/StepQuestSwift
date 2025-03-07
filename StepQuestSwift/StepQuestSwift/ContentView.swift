@@ -22,12 +22,12 @@ struct ContentView: View {
                 .tabItem {
                     Label("Friends", systemImage: "person.2")
                 }
-            SettingsPage()
-                .tabItem {
-                    Label("Settings", systemImage: "gear")
-                }
+//            SettingsPage()
+//                .tabItem {
+//                    Label("Settings", systemImage: "gear")
+//                }
         }
-//        .background(Color.backgroundColor)
+        
         
     }
 }
