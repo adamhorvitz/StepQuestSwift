@@ -12,7 +12,7 @@ struct UserPage: View {
     @State private var stepCount: Int = 50000
     @State private var rank: String = "Gold"
     @State private var streak: Int = 7
-    @State private var isAnimating: Bool = false
+    @State private var animatedProgress: CGFloat = 0.0
     
     // Define gradient colors
     private let goldGradient = LinearGradient(
@@ -34,126 +34,122 @@ struct UserPage: View {
                               startPoint: .top, endPoint: .bottom)
                     .ignoresSafeArea()
                 
-                ScrollView {
-                    VStack(spacing: 25) {
-                        // Profile section with custom styling
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color.white)
-                                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
-                            
-                            VStack(spacing: 15) {
-                                // Avatar with gold border for high rank
-                                ZStack {
-                                    Circle()
-                                        .fill(goldGradient)
-                                        .frame(width: 115, height: 115)
-                                    
-                                    Image(systemName: "person.crop.circle.fill")
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 100, height: 100)
-                                        .foregroundColor(.white)
-                                        .background(Color.gray.clipShape(Circle()))
-                                        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
-                                }
-                                .rotationEffect(Angle(degrees: isAnimating ? 360 : 0))
-                                .animation(Animation.linear(duration: 1).repeatCount(1, autoreverses: false), value: isAnimating)
-                                .onAppear() {
-                                    isAnimating = true
-                                }
-                                
-                                Text(username)
-                                    .font(.system(size: 24, weight: .bold, design: .rounded))
-                                
-                                // Badge row
-                                HStack(spacing: 15) {
-                                    LabelBadge(icon: "crown.fill", text: rank, color: .yellow)
-                                    LabelBadge(icon: "flame.fill", text: "\(streak) days", color: .red)
-                                }
-                            }
-                            .padding(.vertical, 25)
-                        }
-                        .frame(height: 250)
-                        .padding(.horizontal)
+                VStack(spacing: 25) {
+                    // Profile section with custom styling
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.white)
+                            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
                         
-                        // Stats section
                         VStack(spacing: 15) {
-                            Text("Weekly Progress")
-                                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                            
-                            // Animated progress bar
-                            ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.gray.opacity(0.2))
-                                    .frame(height: 25)
+                            // Avatar with gold border for high rank
+                            ZStack {
+                                Circle()
+                                    .fill(goldGradient)
+                                    .frame(width: 115, height: 115)
                                 
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(LinearGradient(gradient: Gradient(colors: [.blue, .purple]),
-                                                         startPoint: .leading, endPoint: .trailing))
-                                    .frame(width: UIScreen.main.bounds.width * 0.8 * progressPercentage, height: 25)
-                                    .animation(.spring(response: 0.8), value: progressPercentage)
+                                Image(systemName: "person.crop.circle.fill")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 100, height: 100)
+                                    .foregroundColor(.white)
+                                    .background(Color.gray.clipShape(Circle()))
+                                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
                             }
-                            .frame(width: UIScreen.main.bounds.width * 0.8)
                             
-                            // Step count display
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text("\(stepCount)")
-                                        .font(.system(size: 36, weight: .bold, design: .rounded))
-                                        .foregroundColor(.blue)
-                                    
-                                    Text("steps this week")
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                }
-                                
-                                Spacer()
-                                
-                                // Target display
-                                VStack(alignment: .trailing) {
-                                    Text("70,000")
-                                        .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                        .foregroundColor(.gray.opacity(0.8))
-                                    
-                                    Text("weekly goal")
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            .padding(.horizontal, 30)
-                        }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color.white)
-                                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
-                        )
-                        .padding(.horizontal)
-                        
-                        // Achievements section
-                        VStack(alignment: .leading, spacing: 15) {
-                            Text("Recent Achievements")
-                                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                .padding(.horizontal)
+                            Text(username)
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
                             
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 15) {
-                                    AchievementCard(icon: "flame.fill", title: "7-Day Streak", color: .red)
-                                    AchievementCard(icon: "figure.walk", title: "50K Steps", color: .blue)
-                                    AchievementCard(icon: "star.fill", title: "Gold Status", color: .yellow)
-                                }
-                                .padding(.horizontal)
+                            // Badge row
+                            HStack(spacing: 15) {
+                                LabelBadge(icon: "crown.fill", text: rank, color: .yellow)
+                                LabelBadge(icon: "flame.fill", text: "\(streak) days", color: .red)
                             }
                         }
-                        .padding(.top)
+                        .padding(.vertical, 15)
+                    }
+                    .frame(height: 250)
+                    .padding(.horizontal)
+                    
+                    // Stats section
+                    VStack(spacing: 15) {
+                        Text("Weekly Progress")
+                            .font(.system(size: 20, weight: .semibold, design: .rounded))
                         
-                        Spacer(minLength: 50)
+                        // Animated progress bar
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.gray.opacity(0.2))
+                                .frame(height: 25)
+                            
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(LinearGradient(gradient: Gradient(colors: [.blue, .purple]),
+                                                     startPoint: .leading, endPoint: .trailing))
+                                .frame(width: UIScreen.main.bounds.width * 0.8 * animatedProgress, height: 25)
+                        }
+                        .frame(width: UIScreen.main.bounds.width * 0.8)
+                        .onAppear {
+                            withAnimation(.easeInOut(duration: 1.5)) {
+                                animatedProgress = progressPercentage
+                            }
+                        }
+                        
+                        // Step count display
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text("\(stepCount)")
+                                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                                    .foregroundColor(.blue)
+                                
+                                Text("steps this week")
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
+                            }
+                            
+                            Spacer()
+                            
+                            // Target display
+                            VStack(alignment: .trailing) {
+                                Text("70,000")
+                                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                                    .foregroundColor(.gray.opacity(0.8))
+                                
+                                Text("weekly goal")
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        .padding(.horizontal, 30)
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.white)
+                            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                    )
+                    .padding(.horizontal)
+                    
+                    // Achievements section
+                    VStack(alignment: .leading, spacing: 15) {
+                        Text("Recent Achievements")
+                            .font(.system(size: 20, weight: .semibold, design: .rounded))
+                            .padding(.horizontal)
+//                        ScrollView(.horizontal) {
+                            HStack(spacing: 15) {
+                                AchievementCard(icon: "flame.fill", title: "7-Day Streak", color: .red)
+                                AchievementCard(icon: "figure.walk", title: "50K Steps", color: .blue)
+                                AchievementCard(icon: "star.fill", title: "Gold Status", color: .yellow)
+                            }
+                            .padding(.horizontal)
+//                        }
                     }
                     .padding(.top)
+                    
+                    Spacer()
                 }
+                .padding(.top)
             }
-            .navigationTitle("Profile")
+            .navigationTitle("User Profile")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
