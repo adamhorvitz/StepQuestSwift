@@ -66,8 +66,8 @@ struct UserPage: View {
                                 LabelBadge(icon: "flame.fill", text: "\(streak) days", color: .red)
                             }
                         }
-                        .padding(.vertical, 15)
                     }
+                    .padding(.top, 10)
                     .frame(height: 250)
                     .padding(.horizontal)
                     
