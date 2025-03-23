@@ -6,8 +6,11 @@
 //
 
 import SwiftUI
+//add log out button at one point maybe in settings page
+//authManager.isLoggedIn = false
 
 struct ContentView: View {
+    @EnvironmentObject var authManager: AuthManager
     var body: some View {
         TabView {
             UserPage()
