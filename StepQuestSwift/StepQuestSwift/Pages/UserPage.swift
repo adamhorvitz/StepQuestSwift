@@ -13,6 +13,8 @@ struct UserPage: View {
     @State private var rank: String = "Gold"
     @State private var streak: Int = 7
     @State private var animatedProgress: CGFloat = 0.0
+    @StateObject var healthManager = HealthManager()
+
     
     // Define gradient colors
     private let goldGradient = LinearGradient(

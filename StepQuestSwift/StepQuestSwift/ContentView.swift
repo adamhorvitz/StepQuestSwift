@@ -11,12 +11,15 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var authManager: AuthManager
+    @StateObject var healthManager = HealthManager()
+
     var body: some View {
         TabView {
             UserPage()
                 .tabItem {
                     Label("User", systemImage: "person.crop.circle")
                 }
+                .environmentObject(healthManager)
             RankingPage()
                 .tabItem {
                     Label("Ranking", systemImage: "rosette")

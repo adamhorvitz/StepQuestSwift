@@ -9,10 +9,6 @@ import SwiftUI
 import Firebase
 import FirebaseAuth
 
-//need to fix how you can still create an account even thought it alr exists in database
-//also wrong password isn't working yet
-
-
 struct LoginPage: View {
     @State private var email = ""
     @State private var password = ""
