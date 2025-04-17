@@ -31,6 +31,7 @@ class HealthManager: ObservableObject {
         let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
         let now = Date()
         let startOfDay = Calendar.current.startOfDay(for: now)
+        //need predicate to know what steps from which day it needs to fetch
         let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: now)
 
         let query = HKStatisticsQuery(
@@ -48,6 +49,7 @@ class HealthManager: ObservableObject {
             // explicitly hop to main actor
             Task { @MainActor in
                 self.stepCount = sum.doubleValue(for: .count())
+                print("Stepcount retrieved from health manager: \(self.stepCount)")
             }
         }
         

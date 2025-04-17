@@ -12,6 +12,7 @@ import FirebaseAuth
 struct LoginPage: View {
     @State private var email = ""
     @State private var password = ""
+    @State private var username = ""
     @State private var isLoginMode = false
     @State private var errorMessage: String?
     @EnvironmentObject var authManager: AuthManager
@@ -30,6 +31,13 @@ struct LoginPage: View {
                         .onChange(of: isLoginMode) {
                             errorMessage = nil
                         }
+                    
+                    if !isLoginMode {
+                        TextField("Username", text: $username)
+                            .autocapitalization(.words)
+                            .padding(12)
+                            .background(Color.white)
+                    }
 
                     TextField("Email", text: $email)
                         .keyboardType(.emailAddress)

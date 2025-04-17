@@ -9,11 +9,13 @@ import SwiftUI
 
 struct UserPage: View {
     @State private var username: String = "Adam Horvitz"
-    @State private var stepCount: Int = 50000
+    var stepCount: Int {
+        Int(healthManager.stepCount)
+    }
     @State private var rank: String = "Gold"
     @State private var streak: Int = 7
     @State private var animatedProgress: CGFloat = 0.0
-    @StateObject var healthManager = HealthManager()
+    @EnvironmentObject var healthManager: HealthManager
 
     
     // Define gradient colors
