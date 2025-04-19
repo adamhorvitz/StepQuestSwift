@@ -12,7 +12,7 @@ import FirebaseAuth
 struct LoginPage: View {
     @State private var email = ""
     @State private var password = ""
-    @State private var username = ""
+    @State private var name = ""
     @State private var isLoginMode = false
     @State private var errorMessage: String?
     @EnvironmentObject var authManager: AuthManager
@@ -33,7 +33,7 @@ struct LoginPage: View {
                         }
                     
                     if !isLoginMode {
-                        TextField("Username", text: $username)
+                        TextField("Name", text: $name)
                             .autocapitalization(.words)
                             .padding(12)
                             .background(Color.white)
@@ -118,12 +118,38 @@ struct LoginPage: View {
                 print("Create error:", error)
                 return
             }
+            
+            guard let user = result?.user else { return }
+            
+            // Save to Firestore
+            let db = Firestore.firestore()
+            db.collection("users").document(user.uid).setData([
+                "name": name,
+                "email": email,
+                "createdAt": Timestamp(date: Date())
+            ]) { err in
+                if let err = err {
+                    print("Error saving username to Firestore:", err.localizedDescription)
+                } else {
+                    print("Username saved to Firestore!")
+                }
+            }
+            
+            // Optional: set display name in Firebase Auth
+            let changeRequest = user.createProfileChangeRequest()
+            changeRequest.displayName = name
+            changeRequest.commitChanges { error in
+                if let error = error {
+                    print("Failed to update display name:", error.localizedDescription)
+                } else {
+                    print("Display name updated to:", name)
+                }
+            }
 
-            print("User created: \(result?.user.uid ?? "")")
+            print("User created for: \(name)")
             authManager.isLoggedIn = true
         }
     }
-
 }
 
 struct ContentView_Preview1: PreviewProvider {

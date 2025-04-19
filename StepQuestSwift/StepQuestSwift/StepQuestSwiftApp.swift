@@ -20,6 +20,7 @@ struct StepQuestSwiftApp: App {
     }
     @StateObject var authManager = AuthManager()
     @StateObject var healthManager = HealthManager()
+    @StateObject var userDataManager = UserDataManager()
     
     var body: some Scene {
         WindowGroup {

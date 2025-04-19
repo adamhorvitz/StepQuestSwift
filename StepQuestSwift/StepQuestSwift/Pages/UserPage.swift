@@ -6,16 +6,19 @@
 //
 
 import SwiftUI
+import Firebase
+import FirebaseAuth
 
 struct UserPage: View {
-    @State private var username: String = "Adam Horvitz"
+    @EnvironmentObject var authManager: AuthManager
+    @EnvironmentObject var healthManager: HealthManager
+    @EnvironmentObject var userDataManager: UserDataManager
+    @State private var showingSettings = false
+    
     var stepCount: Int {
         Int(healthManager.stepCount)
     }
-    @State private var rank: String = "Gold"
-    @State private var streak: Int = 7
     @State private var animatedProgress: CGFloat = 0.0
-    @EnvironmentObject var healthManager: HealthManager
 
     
     // Define gradient colors
@@ -27,9 +30,9 @@ struct UserPage: View {
     
     // Calculate percentage of weekly goal (assuming 70,000 steps/week goal)
     private var progressPercentage: CGFloat {
-        min(CGFloat(stepCount) / 70000.0, 1.0)
+        min(CGFloat(stepCount) / CGFloat(userDataManager.weeklyGoal), 1.0)
     }
-    
+        
     var body: some View {
         NavigationView {
             ZStack {
@@ -61,13 +64,13 @@ struct UserPage: View {
                                     .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
                             }
                             
-                            Text(username)
+                            Text(userDataManager.name)
                                 .font(.system(size: 24, weight: .bold, design: .rounded))
                             
                             // Badge row
                             HStack(spacing: 15) {
-                                LabelBadge(icon: "crown.fill", text: rank, color: .yellow)
-                                LabelBadge(icon: "flame.fill", text: "\(streak) days", color: .red)
+                                LabelBadge(icon: "crown.fill", text: userDataManager.rank, color: .yellow)
+                                LabelBadge(icon: "flame.fill", text: "\(userDataManager.streak) days", color: .red)
                             }
                         }
                     }
@@ -81,23 +84,18 @@ struct UserPage: View {
                             .font(.system(size: 20, weight: .semibold, design: .rounded))
                         
                         // Animated progress bar
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color.gray.opacity(0.2))
-                                .frame(height: 25)
-                            
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(LinearGradient(gradient: Gradient(colors: [.blue, .purple]),
-                                                     startPoint: .leading, endPoint: .trailing))
-                                .frame(width: UIScreen.main.bounds.width * 0.8 * animatedProgress, height: 25)
-                        }
-                        .frame(width: UIScreen.main.bounds.width * 0.8)
+                        ProgressBar(progress: progressPercentage)
+                            .frame(width: UIScreen.main.bounds.width * 0.8)
+                        
                         .onAppear {
+                            userDataManager.fetchUserData()
+                        }
+                        .onChange(of: stepCount) {
                             withAnimation(.easeInOut(duration: 1.5)) {
                                 animatedProgress = progressPercentage
                             }
                         }
-                        
+
                         // Step count display
                         HStack {
                             VStack(alignment: .leading) {
@@ -114,7 +112,7 @@ struct UserPage: View {
                             
                             // Target display
                             VStack(alignment: .trailing) {
-                                Text("70,000")
+                                Text("\(userDataManager.weeklyGoal)")
                                     .font(.system(size: 20, weight: .semibold, design: .rounded))
                                     .foregroundColor(.gray.opacity(0.8))
                                 
@@ -157,11 +155,17 @@ struct UserPage: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {}) {
+                    Button(action: {
+                        showingSettings = true
+                    }) {
                         Image(systemName: "gearshape.fill")
                             .foregroundColor(.blue)
                     }
                 }
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsPage()
+                    .environmentObject(userDataManager)
             }
         }
     }
@@ -213,6 +217,33 @@ struct AchievementCard: View {
         .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
     }
 }
+
+//the progress bar wasnt implement correctly so had to change it?
+struct ProgressBar: View {
+    var progress: CGFloat // from 0.0 to 1.0
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.gray.opacity(0.2))
+                .frame(height: 25)
+
+            RoundedRectangle(cornerRadius: 10)
+                .fill(LinearGradient(
+                    gradient: Gradient(colors: [.blue, .purple]),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                ))
+                .frame(width: progressBarWidth * progress, height: 25)
+                .animation(.easeInOut(duration: 1.5), value: progress)
+        }
+    }
+
+    private var progressBarWidth: CGFloat {
+        UIScreen.main.bounds.width * 0.8
+    }
+}
+
 
 #Preview {
     UserPage()
