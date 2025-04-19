@@ -35,6 +35,16 @@ class UserDataManager: ObservableObject {
                 self.rank = data["rank"] as? String ?? "Bronze"
                 self.streak = data["streak"] as? Int ?? 0
                 self.weeklyGoal = data["weeklyGoal"] as? Int ?? 20000
+
+                // PATCH missing fields back to Firestore
+                var updates: [String: Any] = [:]
+                if data["rank"] == nil { updates["rank"] = "Bronze" }
+                if data["streak"] == nil { updates["streak"] = 0 }
+                if data["weeklyGoal"] == nil { updates["weeklyGoal"] = 20000 }
+
+                if !updates.isEmpty {
+                    Firestore.firestore().collection("users").document(uid).updateData(updates)
+                }
             }
         }
     }

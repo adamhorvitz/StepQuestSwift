@@ -90,8 +90,8 @@ struct LoginPage: View {
             print("Register a new account inside of Firebase Auth")
         }
     }
+
     private func loginUser() {
-        //i think its this function that not correctly checking if the password is in database so if u use wrong password it still logs u in
         Auth.auth().signIn(withEmail: email, password: password) { result, error in
             if let error = error {
                 self.errorMessage = "Wrong email or password."
@@ -99,8 +99,33 @@ struct LoginPage: View {
                 return
             }
             print("Successfully logged in as: \(result?.user.uid ?? "")")
-            authManager.isLoggedIn = true
-            
+
+            guard let user = result?.user else { return }
+            let uid = user.uid
+            let docRef = Firestore.firestore().collection("users").document(uid)
+
+            docRef.getDocument { document, error in
+                if let document = document, document.exists {
+                    print("User document already exists.")
+                } else {
+                    //update old users that didn't have data in firestore database
+                    docRef.setData([
+                        "name": "Name",
+                        "weeklyGoal": 20000,
+                        "rank": "Bronze",
+                        "streak": 0,
+                        "createdAt": Timestamp(date: Date()),
+                        "email": user.email ?? "unknown"
+                    ]) { error in
+                        if let error = error {
+                            print("Error creating user doc:", error.localizedDescription)
+                        } else {
+                            print("User document created for legacy user.")
+                        }
+                    }
+                }
+                authManager.isLoggedIn = true
+            }
         }
     }
     
@@ -150,6 +175,7 @@ struct LoginPage: View {
             authManager.isLoggedIn = true
         }
     }
+
 }
 
 struct ContentView_Preview1: PreviewProvider {
@@ -157,7 +183,3 @@ struct ContentView_Preview1: PreviewProvider {
         LoginPage()
     }
 }
-
-//#Preview {
-//    LoginPage()
-//}
