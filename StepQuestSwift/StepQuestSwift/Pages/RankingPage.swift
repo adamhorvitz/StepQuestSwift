@@ -5,37 +5,27 @@ struct RankingPage: View {
     @EnvironmentObject var healthManager: HealthManager
     @EnvironmentObject var userDataManager: UserDataManager
 
-    @State private var friends: [User] = [] // Placeholder, replace with real Firebase data later
+    @State private var allUsersFromDB: [User] = []
 
-    // Computed property for current user
-    private var currentUser: User {
-        User(
-            id: Auth.auth().currentUser?.uid ?? "user",
-            name: userDataManager.name,
-            steps: Int(healthManager.stepCount),
-            rank: userDataManager.tier,
-            avatarSymbol: "person.crop.circle.fill"
-        )
-    }
-
-    // Combined and sorted list
+    // Sorted users from Firestore
     private var allUsers: [User] {
-        var combined = friends
-        combined.append(currentUser)
-        return combined.sorted { $0.steps > $1.steps }
+        allUsersFromDB.sorted { $0.steps > $1.steps }
     }
 
-    // Get position of current user
+    // Top 5 users
+    private var topFiveUsers: [User] {
+        Array(allUsers.prefix(5))
+    }
+
+    // User's rank in list
     private var userRank: Int {
-        if let index = allUsers.firstIndex(where: { $0.id == currentUser.id }) {
-            return index + 1
-        }
-        return 0
+        guard let currentUserID = Auth.auth().currentUser?.uid else { return 0 }
+        return (allUsers.firstIndex(where: { $0.id == currentUserID }) ?? -1) + 1
     }
 
-    // Get top stepper
+    // Top user or fallback
     private var topStepper: User {
-        return allUsers.first!
+        allUsers.first ?? User(id: "placeholder", name: "No users yet", steps: 0, rank: "None", avatarSymbol: "person.crop.circle")
     }
 
     var body: some View {
@@ -47,120 +37,14 @@ struct RankingPage: View {
 
                 ScrollView {
                     VStack(spacing: 40) {
-                        // Leader section
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color.white)
-                                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                        // Top user section
+                        TopUser(topStepper: topStepper)
 
-                            VStack(spacing: 15) {
-                                Text("This Week's Leader")
-                                    .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                    .foregroundColor(.gray.opacity(0.8))
-                                    .padding(.bottom, 15)
-
-                                ZStack {
-                                    Image(systemName: "crown.fill")
-                                        .font(.system(size: 30))
-                                        .foregroundColor(.yellow)
-                                        .offset(y: -55)
-                                        .padding(.top, 5)
-
-                                    ZStack {
-                                        Circle()
-                                            .fill(LinearGradient(
-                                                gradient: Gradient(colors: [.purple, .blue]),
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            ))
-                                            .frame(width: 95, height: 95)
-
-                                        Image(systemName: topStepper.avatarSymbol)
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 80, height: 80)
-                                            .foregroundColor(.white)
-                                            .background(Color.gray.clipShape(Circle()))
-                                    }
-                                }
-
-                                Text(topStepper.name)
-                                    .font(.system(size: 20, weight: .bold, design: .rounded))
-
-                                Text("\(topStepper.steps.formattedWithCommas) steps")
-                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                                    .foregroundColor(.blue)
-
-                                Text(topStepper.rank)
-                                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                                    .foregroundColor(.purple)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 6)
-                                    .background(Color.purple.opacity(0.1))
-                                    .cornerRadius(12)
-                            }
-                            .padding()
+                        // Current user's rank (optional: only show if user is in list)
+                        if let currentUserID = Auth.auth().currentUser?.uid,
+                           let currentUser = allUsers.first(where: { $0.id == currentUserID }) {
+                            UserRankSection(user: currentUser, rank: userRank, allUsers: allUsers)
                         }
-                        .frame(height: 240)
-                        .padding(.horizontal)
-                        .padding(.top, 15)
-                        .padding(.bottom, 20)
-
-                        // User rank
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color.white)
-                                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
-
-                            VStack(spacing: 15) {
-                                Text("Your Current Ranking")
-                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                                    .foregroundColor(.gray.opacity(0.8))
-                                    .padding(.top, 5)
-
-                                HStack(alignment: .center, spacing: 15) {
-                                    Text("#\(userRank)")
-                                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                                        .foregroundColor(.blue)
-
-                                    Divider()
-                                        .frame(height: 40)
-
-                                    VStack(alignment: .leading, spacing: 5) {
-                                        Text(currentUser.name)
-                                            .font(.system(size: 18, weight: .bold, design: .rounded))
-
-                                        Text("\(currentUser.steps.formattedWithCommas) steps")
-                                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                                            .foregroundColor(.gray)
-                                    }
-
-                                    Spacer()
-
-                                    if userRank > 1 {
-                                        let stepsToNext = allUsers[userRank-2].steps - currentUser.steps
-                                        VStack(alignment: .trailing, spacing: 5) {
-                                            Text("\(stepsToNext.formattedWithCommas)")
-                                                .font(.system(size: 16, weight: .bold, design: .rounded))
-                                                .foregroundColor(.orange)
-
-                                            Text("steps to #\(userRank-1)")
-                                                .font(.system(size: 14, weight: .medium, design: .rounded))
-                                                .foregroundColor(.gray)
-                                        }
-                                    } else {
-                                        Image(systemName: "crown.fill")
-                                            .font(.system(size: 26))
-                                            .foregroundColor(.yellow)
-                                    }
-                                }
-                                .padding(.horizontal)
-                                .padding(.bottom, 5)
-                            }
-                            .padding()
-                        }
-                        .frame(height: 120)
-                        .padding(.horizontal)
 
                         // Leaderboard
                         VStack(alignment: .leading, spacing: 20) {
@@ -174,14 +58,14 @@ struct RankingPage: View {
                                     .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
 
                                 VStack(spacing: 0) {
-                                    ForEach(Array(allUsers.enumerated()), id: \.element.id) { index, user in
+                                    ForEach(Array(topFiveUsers.enumerated()), id: \.element.id) { index, user in
                                         LeaderboardRow(
                                             rank: index + 1,
                                             user: user,
-                                            isCurrentUser: user.id == currentUser.id
+                                            isCurrentUser: user.id == Auth.auth().currentUser?.uid
                                         )
 
-                                        if index < allUsers.count - 1 {
+                                        if index < topFiveUsers.count - 1 {
                                             Divider()
                                                 .padding(.horizontal)
                                         }
@@ -196,7 +80,9 @@ struct RankingPage: View {
                     }
                     .padding(.top)
                     .onAppear {
-                        userDataManager.fetchUserData()
+                        userDataManager.fetchAllUsers { users in
+                            self.allUsersFromDB = users
+                        }
                         healthManager.fetchStepCount()
                     }
                 }
@@ -207,7 +93,9 @@ struct RankingPage: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        userDataManager.fetchUserData()
+                        userDataManager.fetchAllUsers { users in
+                            self.allUsersFromDB = users
+                        }
                         healthManager.fetchStepCount()
                     }) {
                         Image(systemName: "arrow.clockwise")
@@ -218,6 +106,67 @@ struct RankingPage: View {
         }
     }
 }
+
+struct UserRankSection: View {
+    var user: User
+    var rank: Int
+    var allUsers: [User]
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white)
+                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+
+            VStack(spacing: 15) {
+                Text("Your Current Ranking")
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .foregroundColor(.gray.opacity(0.8))
+                    .padding(.top, 5)
+
+                HStack(spacing: 15) {
+                    Text("#\(rank)")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundColor(.blue)
+
+                    Divider().frame(height: 40)
+
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(user.name)
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                        Text("\(user.steps.formattedWithCommas) steps")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.gray)
+                    }
+
+                    Spacer()
+
+                    if rank > 1 {
+                        let stepsToNext = allUsers[rank - 2].steps - user.steps
+                        VStack(alignment: .trailing, spacing: 5) {
+                            Text("\(stepsToNext.formattedWithCommas)")
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundColor(.orange)
+                            Text("to #\(rank - 1)")
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .foregroundColor(.gray)
+                        }
+                    } else {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 26))
+                            .foregroundColor(.yellow)
+                    }
+                }
+                .padding(.horizontal)
+            }
+            .padding()
+        }
+        .frame(height: 120)
+        .padding(.horizontal)
+    }
+}
+
+
 
 struct LeaderboardRow: View {
     let rank: Int
@@ -271,17 +220,70 @@ struct LeaderboardRow: View {
     }
 }
 
-struct User: Identifiable, Equatable {
-    var id: String
-    var name: String
-    var steps: Int
-    var rank: String
-    var avatarSymbol: String
+struct TopUser: View {
+    var topStepper: User
 
-    static func == (lhs: User, rhs: User) -> Bool {
-        return lhs.id == rhs.id
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white)
+                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+
+            VStack(spacing: 15) {
+                Text("This Week's Leader")
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .foregroundColor(.gray.opacity(0.8))
+                    .padding(.bottom, 15)
+
+                ZStack {
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 30))
+                        .foregroundColor(.yellow)
+                        .offset(y: -55)
+                        .padding(.top, 5)
+
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.purple, .blue]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 95, height: 95)
+                        .overlay(
+                            Image(systemName: topStepper.avatarSymbol)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 80, height: 80)
+                                .foregroundColor(.white)
+                        )
+                }
+
+                Text(topStepper.name)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+
+                Text("\(topStepper.steps.formattedWithCommas) steps")
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .foregroundColor(.blue)
+
+                Text(topStepper.rank)
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .foregroundColor(.purple)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+                    .background(Color.purple.opacity(0.1))
+                    .cornerRadius(12)
+            }
+            .padding()
+        }
+        .frame(height: 240)
+        .padding(.horizontal)
+        .padding(.top, 15)
+        .padding(.bottom, 20)
     }
 }
+
 
 extension Int {
     var formattedWithCommas: String {

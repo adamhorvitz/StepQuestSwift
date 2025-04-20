@@ -71,4 +71,44 @@ class UserDataManager: ObservableObject {
             }
         }
     }
+    
+    func fetchAllUsers(completion: @escaping ([User]) -> Void) {
+        let db = Firestore.firestore()
+
+        db.collection("users").getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching all users: \(error.localizedDescription)")
+                completion([])
+                return
+            }
+
+            guard let documents = snapshot?.documents else {
+                print("No users found.")
+                completion([])
+                return
+            }
+
+            let users: [User] = documents.compactMap { doc in
+                let data = doc.data()
+                guard
+                    let name = data["name"] as? String,
+                    let tier = data["tier"] as? String,
+                    let weeklyStepCount = data["weeklyStepCount"] as? Int
+                else {
+                    return nil
+                }
+
+                return User(
+                    id: doc.documentID,
+                    name: name,
+                    steps: weeklyStepCount,
+                    rank: tier,
+                    avatarSymbol: "person.crop.circle.fill"
+                )
+            }
+
+            completion(users)
+        }
+    }
+
 }
