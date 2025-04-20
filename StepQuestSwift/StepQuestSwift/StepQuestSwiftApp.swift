@@ -26,6 +26,8 @@ struct StepQuestSwiftApp: App {
         WindowGroup {
             ContentViewSwitcher()
                 .environmentObject(authManager)
+                .environmentObject(healthManager)
+                .environmentObject(userDataManager)
         }
     }
 }
