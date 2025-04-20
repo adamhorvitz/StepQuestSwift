@@ -31,8 +31,9 @@ class HealthManager: ObservableObject {
         let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
         let now = Date()
         let startOfDay = Calendar.current.startOfDay(for: now)
+        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -6, to: startOfDay)!
         //need predicate to know what steps from which day it needs to fetch
-        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: now)
+        let predicate = HKQuery.predicateForSamples(withStart: sevenDaysAgo, end: now)
 
         let query = HKStatisticsQuery(
             quantityType: stepType,
@@ -46,10 +47,13 @@ class HealthManager: ObservableObject {
                 return
             }
 
-            // explicitly hop to main actor
+            //explicitly hop to main actor
             Task { @MainActor in
                 self.stepCount = sum.doubleValue(for: .count())
                 print("Stepcount retrieved from health manager: \(self.stepCount)")
+                
+                //save users stepcount to firestore
+                UserDataManager().updateUserData(weeklyStepCount: Int(self.stepCount))
             }
         }
         

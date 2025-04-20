@@ -49,7 +49,7 @@ struct UserPage: View {
                             .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
                         
                         VStack(spacing: 15) {
-                            // Avatar with gold border for high rank
+                            // Avatar with gold border for high tier
                             ZStack {
                                 Circle()
                                     .fill(goldGradient)
@@ -69,7 +69,7 @@ struct UserPage: View {
                             
                             // Badge row
                             HStack(spacing: 15) {
-                                LabelBadge(icon: "crown.fill", text: userDataManager.rank, color: .yellow)
+                                LabelBadge(icon: "crown.fill", text: userDataManager.tier, color: .yellow)
                                 LabelBadge(icon: "flame.fill", text: "\(userDataManager.streak) days", color: .red)
                             }
                         }
@@ -138,9 +138,9 @@ struct UserPage: View {
                             .padding(.horizontal)
 //                        ScrollView(.horizontal) {
                             HStack(spacing: 15) {
-                                AchievementCard(icon: "flame.fill", title: "7-Day Streak", color: .red)
-                                AchievementCard(icon: "figure.walk", title: "50K Steps", color: .blue)
-                                AchievementCard(icon: "star.fill", title: "Gold Status", color: .yellow)
+                                AchievementCard(icon: "flame.fill", title: "\(userDataManager.streak) Streak", color: .red)
+                                AchievementCard(icon: "figure.walk", title: "\(userDataManager.weeklyGoal/1000)K Steps", color: .blue)
+                                AchievementCard(icon: "star.fill", title: "\(userDataManager.tier)", color: .yellow)
                             }
                             .padding(.horizontal)
 //                        }

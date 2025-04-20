@@ -16,9 +16,10 @@ import FirebaseAuth
 //go to setting to see ex view to display/change profile stuff
 class UserDataManager: ObservableObject {
     @Published var name: String = ""
-    @Published var rank: String = ""
+    @Published var tier: String = ""
     @Published var streak: Int = 0
     @Published var weeklyGoal: Int = 20000
+    @Published var weeklyStepCount: Int = 0
 
     func fetchUserData() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
@@ -32,15 +33,17 @@ class UserDataManager: ObservableObject {
 
             DispatchQueue.main.async {
                 self.name = data["name"] as? String ?? ""
-                self.rank = data["rank"] as? String ?? "Bronze"
+                self.tier = data["tier"] as? String ?? "Bronze"
                 self.streak = data["streak"] as? Int ?? 0
                 self.weeklyGoal = data["weeklyGoal"] as? Int ?? 20000
+                self.weeklyStepCount = data["weeklyStepCount"] as? Int ?? 0
 
-                // PATCH missing fields back to Firestore
+                //pATCH missing fields back to firestore
                 var updates: [String: Any] = [:]
-                if data["rank"] == nil { updates["rank"] = "Bronze" }
+                if data["tier"] == nil { updates["tier"] = "Bronze" }
                 if data["streak"] == nil { updates["streak"] = 0 }
                 if data["weeklyGoal"] == nil { updates["weeklyGoal"] = 20000 }
+                if data["weeklyStepCount"] == nil { updates["weeklyStepCount"] = 0 }
 
                 if !updates.isEmpty {
                     Firestore.firestore().collection("users").document(uid).updateData(updates)
@@ -49,14 +52,15 @@ class UserDataManager: ObservableObject {
         }
     }
     
-    func updateUserData(name: String? = nil, rank: String? = nil, streak: Int? = nil, weeklyGoal: Int? = nil) {
+    func updateUserData(name: String? = nil, tier: String? = nil, streak: Int? = nil, weeklyGoal: Int? = nil, weeklyStepCount: Int? = nil) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
 
         var updates: [String: Any] = [:]
         if let name = name { updates["name"] = name }
-        if let rank = rank { updates["rank"] = rank }
+        if let tier = tier { updates["tier"] = tier }
         if let streak = streak { updates["streak"] = streak }
         if let weeklyGoal = weeklyGoal { updates["weeklyGoal"] = weeklyGoal }
+        if let weeklyStepCount = weeklyStepCount { updates["weeklyStepCount"] = weeklyStepCount }
 
         Firestore.firestore().collection("users").document(uid).updateData(updates) { error in
             if let error = error {
