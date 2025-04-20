@@ -26,11 +26,12 @@ struct StepQuestSwiftApp: App {
         WindowGroup {
             ContentViewSwitcher()
                 .environmentObject(authManager)
+                .environmentObject(healthManager)
+                .environmentObject(userDataManager)
         }
     }
 }
 
- // Use this to apply environmentObject cleanly:
 struct ContentViewSwitcher: View {
     @EnvironmentObject var authManager: AuthManager
     
