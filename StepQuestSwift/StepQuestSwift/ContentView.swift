@@ -11,12 +11,18 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var authManager: AuthManager
+    @StateObject var healthManager = HealthManager()
+    @StateObject var userDataManager = UserDataManager()
+
     var body: some View {
         TabView {
             UserPage()
                 .tabItem {
                     Label("User", systemImage: "person.crop.circle")
                 }
+                .environmentObject(healthManager)
+                .environmentObject(authManager)
+                .environmentObject(userDataManager)
             RankingPage()
                 .tabItem {
                     Label("Ranking", systemImage: "rosette")
@@ -25,6 +31,7 @@ struct ContentView: View {
                 .tabItem {
                     Label("Friends", systemImage: "person.2")
                 }
+//settings is in userpage 
 //            SettingsPage()
 //                .tabItem {
 //                    Label("Settings", systemImage: "gear")

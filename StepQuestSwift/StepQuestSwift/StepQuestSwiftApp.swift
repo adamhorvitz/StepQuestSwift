@@ -18,17 +18,29 @@ struct StepQuestSwiftApp: App {
     init() {
         FirebaseApp.configure()
     }
-    
     @StateObject var authManager = AuthManager()
-
+    @StateObject var healthManager = HealthManager()
+    @StateObject var userDataManager = UserDataManager()
+    
     var body: some Scene {
         WindowGroup {
-            if authManager.isLoggedIn {
-                ContentView()
-            } else {
-                LoginPage()
-            }
+            ContentViewSwitcher()
+                .environmentObject(authManager)
         }
-        .environmentObject(authManager)
     }
 }
+
+ // Use this to apply environmentObject cleanly:
+struct ContentViewSwitcher: View {
+    @EnvironmentObject var authManager: AuthManager
+    
+    var body: some View {
+        if authManager.isLoggedIn {
+            ContentView()
+            
+        } else {
+            LoginPage()
+        }
+    }
+}
+
