@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct RankingPage: View {
-        User(id: "friend3", name: "Emily Davis", steps: 38750, rank: "Silver", avatarSymbol: "person.crop.circle.fill"),
     @EnvironmentObject var userDataManager: UserDataManager
 
     private var allUsers: [User] {
