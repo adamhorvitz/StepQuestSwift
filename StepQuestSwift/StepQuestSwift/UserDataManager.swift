@@ -18,6 +18,8 @@ class UserDataManager: ObservableObject {
     @Published var friends: [String] = []
     @Published var friendsData: [UserProfile] = []
     @Published var friendCode: String = ""
+    @Published var globalLeaderboardData: [UserProfile] = []
+    @Published var avatarSymbol: String = "person.crop.circle"
     
     func fetchUserData() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
@@ -36,6 +38,7 @@ class UserDataManager: ObservableObject {
                 self.weeklyGoal = data["weeklyGoal"] as? Int ?? 20000
                 self.weeklyStepCount = data["weeklyStepCount"] as? Int ?? 0
                 self.friends = data["friends"] as? [String] ?? []
+                self.avatarSymbol = data["avatarSymbol"] as? String ?? "person.crop.circle"
                 var updates: [String: Any] = [:]
                 if data["friendCode"] == nil {
                     let code = Self.generateFriendCode()
@@ -51,6 +54,7 @@ class UserDataManager: ObservableObject {
                 if data["weeklyGoal"] == nil { updates["weeklyGoal"] = 20000 }
                 if data["weeklyStepCount"] == nil { updates["weeklyStepCount"] = 0 }
                 if data["friends"] == nil { updates["friends"] = [] }
+                if data["avatarSymbol"] == nil { updates["avatarSymbol"] = "person.crop.circle" }
 
                 if !updates.isEmpty {
                     Firestore.firestore().collection("users").document(uid).updateData(updates) { _ in
@@ -63,7 +67,14 @@ class UserDataManager: ObservableObject {
         }
     }
     
-    func updateUserData(name: String? = nil, tier: String? = nil, streak: Int? = nil, weeklyGoal: Int? = nil, weeklyStepCount: Int? = nil) {
+    func updateUserData(
+        name: String? = nil,
+        tier: String? = nil,
+        streak: Int? = nil,
+        weeklyGoal: Int? = nil,
+        weeklyStepCount: Int? = nil,
+        avatarSymbol: String? = nil
+    ) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
 
         var updates: [String: Any] = [:]
@@ -72,6 +83,7 @@ class UserDataManager: ObservableObject {
         if let streak = streak { updates["streak"] = streak }
         if let weeklyGoal = weeklyGoal { updates["weeklyGoal"] = weeklyGoal }
         if let weeklyStepCount = weeklyStepCount { updates["weeklyStepCount"] = weeklyStepCount }
+        if let avatarSymbol = avatarSymbol { updates["avatarSymbol"] = avatarSymbol }
 
         Firestore.firestore().collection("users").document(uid).updateData(updates) { error in
             if let error = error {
@@ -82,6 +94,7 @@ class UserDataManager: ObservableObject {
             }
         }
     }
+
     
     func fetchFriendsData() {
         friendsData = [] // clear old list
@@ -98,7 +111,8 @@ class UserDataManager: ObservableObject {
                     name: data["name"] as? String ?? "Unknown",
                     tier: data["tier"] as? String ?? "Bronze",
                     weeklyStepCount: data["weeklyStepCount"] as? Int ?? 0,
-                    streak: data["streak"] as? Int ?? 0
+                    streak: data["streak"] as? Int ?? 0,
+                    avatarSymbol: data["avatarSymbol"] as? String
                 )
 
                 DispatchQueue.main.async {
@@ -173,6 +187,32 @@ class UserDataManager: ObservableObject {
 
         return "\(part1)-\(part2)-\(part3)"
     }
+    
+    func fetchAllUsersForLeaderboard(completion: @escaping ([UserProfile]) -> Void) {
+        Firestore.firestore().collection("users").getDocuments { snapshot, error in
+            guard let documents = snapshot?.documents else {
+                print("Failed to fetch global users:", error?.localizedDescription ?? "Unknown error")
+                completion([])
+                return
+            }
+
+            let profiles: [UserProfile] = documents.compactMap { doc in
+                let data = doc.data()
+                return UserProfile(
+                    id: doc.documentID,
+                    name: data["name"] as? String ?? "Unknown",
+                    tier: data["tier"] as? String ?? "Bronze",
+                    weeklyStepCount: data["weeklyStepCount"] as? Int ?? 0,
+                    streak: data["streak"] as? Int ?? 0,
+                    avatarSymbol: data["avatarSymbol"] as? String
+                )
+            }
+
+            DispatchQueue.main.async {
+                completion(profiles)
+            }
+        }
+    }
 }
 
 struct UserProfile: Identifiable {
@@ -181,5 +221,6 @@ struct UserProfile: Identifiable {
     var tier: String
     var weeklyStepCount: Int
     var streak: Int?
+    var avatarSymbol: String?
 }
 

@@ -1,30 +1,24 @@
 import SwiftUI
+import Firebase
+import FirebaseAuth
 
 struct RankingPage: View {
+    @EnvironmentObject var authManager: AuthManager
     @EnvironmentObject var userDataManager: UserDataManager
 
     private var allUsers: [User] {
-        let current = User(
-            id: "current",
-            name: userDataManager.name,
-            steps: userDataManager.weeklyStepCount,
-            rank: userDataManager.tier,
-            avatarSymbol: "person.crop.circle.fill"
-        )
+        let currentUID = Auth.auth().currentUser?.uid
+        let allProfiles = userDataManager.globalLeaderboardData
 
-        let friends = userDataManager.friendsData.map {
+        return allProfiles.map { profile in
             User(
-                id: $0.id,
-                name: $0.name,
-                steps: $0.weeklyStepCount,
-                rank: $0.tier,
-                avatarSymbol: "person.crop.circle.fill"
+                id: profile.id == currentUID ? "current" : profile.id,
+                name: profile.name,
+                steps: profile.weeklyStepCount,
+                rank: profile.tier,
+                avatarSymbol: profile.avatarSymbol?.isEmpty == false ? profile.avatarSymbol! : "person.crop.circle"
             )
-        }
-
-        var combined = friends
-        combined.append(current)
-        return combined.sorted { $0.steps > $1.steps }
+        }.sorted { $0.steps > $1.steps }
     }
 
     private var userRank: Int {
@@ -42,41 +36,56 @@ struct RankingPage: View {
                                startPoint: .top, endPoint: .bottom)
                     .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 40) {
-                        TopUser(topStepper: topStepper)
+                if userDataManager.globalLeaderboardData.isEmpty {
+                    ProgressView("Loading leaderboard...")
+                        .padding()
+                } else {
+                    ScrollView {
+                        VStack(spacing: 40) {
+                            TopUser(topStepper: topStepper)
 
-                        if let currentUser = allUsers.first(where: { $0.id == "current" }) {
-                            UserRankSection(user: currentUser, rank: userRank, allUsers: allUsers)
-                        }
+                            if let currentUser = allUsers.first(where: { $0.id == "current" }) {
+                                UserRankSection(user: currentUser, rank: userRank, allUsers: allUsers)
+                            }
 
-                        VStack(alignment: .leading, spacing: 20) {
-                            Text("Weekly Leaderboard")
-                                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                .padding(.horizontal)
-                            
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(Color.white)
-                                    .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                            VStack(alignment: .leading, spacing: 15) {
+                                Text("Weekly Leaderboard")
+                                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                                    .padding(.horizontal)
+                                
+                                Text("Showing Top 10")
+                                            .font(.system(size: 20, weight: .semibold, design: .rounded))
+                                            .foregroundColor(.gray)
+                                            .padding(.horizontal)
 
-                                VStack(spacing: 0) {
-                                    ForEach(Array(allUsers.enumerated()), id: \.element.id) { index, user in
-                                        LeaderboardRow(rank: index + 1, user: user, isCurrentUser: user.id == "current")
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .fill(Color.white)
+                                        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
 
-                                        if index < allUsers.count - 1 {
-                                            Divider().padding(.horizontal)
+                                    VStack(spacing: 0) {
+                                        ForEach(Array(allUsers.prefix(10).enumerated()), id: \.element.id) { index, user in
+                                            LeaderboardRow(rank: index + 1, user: user, isCurrentUser: user.id == "current")
+
+                                            if index < allUsers.count - 1 {
+                                                Divider().padding(.horizontal)
+                                            }
                                         }
                                     }
+                                    .padding(.vertical, 15)
                                 }
-                                .padding(.vertical, 15)
+                                .padding(.horizontal)
                             }
-                            .padding(.horizontal)
-                        }
 
-                        Spacer(minLength: 40)
+                            Spacer(minLength: 40)
+                        }
+                        .padding(.top)
                     }
-                    .padding(.top)
+                }
+            }
+            .onAppear {
+                userDataManager.fetchAllUsersForLeaderboard { users in
+                    userDataManager.globalLeaderboardData = users
                 }
             }
             .navigationTitle("Rankings")
