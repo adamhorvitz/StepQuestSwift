@@ -32,7 +32,6 @@ struct StepQuestSwiftApp: App {
     }
 }
 
- // Use this to apply environmentObject cleanly:
 struct ContentViewSwitcher: View {
     @EnvironmentObject var authManager: AuthManager
     

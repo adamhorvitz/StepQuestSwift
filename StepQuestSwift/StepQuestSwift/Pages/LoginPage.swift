@@ -108,7 +108,7 @@ struct LoginPage: View {
                 if let document = document, document.exists {
                     print("User document already exists.")
                 } else {
-                    //update old users that didn't have data in firestore database
+                    //update old users that didn't have data in firestore database yet
                     docRef.setData([
                         "name": "Name",
                         "weeklyGoal": 20000,

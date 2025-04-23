@@ -8,17 +8,11 @@
 import SwiftUI
 
 struct FriendsPage: View {
+    @EnvironmentObject var userDataManager: UserDataManager
     @State private var selectedTab = 0
     @State private var searchText = ""
     @State private var showAddFriendSheet = false
     @State private var showCreateGroupSheet = false
-    
-    // Sample data
-    private let friends = [
-        Friend(id: 1, name: "Sarah Johnson", stepCount: 62000, rank: "Gold", streak: 14),
-        Friend(id: 2, name: "Mike Chen", stepCount: 48000, rank: "Silver", streak: 5),
-        Friend(id: 3, name: "Taylor Swift", stepCount: 71000, rank: "Platinum", streak: 21)
-    ]
     
     private let groups = [
         Group(id: 1, name: "Weekend Warriors", members: 4, totalSteps: 239000),
@@ -67,12 +61,15 @@ struct FriendsPage: View {
                         // Friends list
                         ScrollView {
                             VStack(spacing: 15) {
-                                ForEach(friends) { friend in
+                                ForEach(userDataManager.friendsData) { friend in
                                     FriendCard(friend: friend)
                                 }
                             }
                             .padding(.horizontal)
                             .padding(.bottom, 80) // Extra padding for FAB
+                        }
+                        .onAppear {
+                            userDataManager.fetchFriendsData()
                         }
                     } else {
                         // Groups list
@@ -122,10 +119,14 @@ struct FriendsPage: View {
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showAddFriendSheet) {
                 AddFriendView()
+                    .environmentObject(userDataManager)
             }
             .sheet(isPresented: $showCreateGroupSheet) {
                 CreateGroupView()
             }
+        }
+        .onAppear {
+            userDataManager.fetchUserData()
         }
     }
 }
@@ -151,7 +152,7 @@ struct TabButton: View {
 }
 
 struct FriendCard: View {
-    var friend: Friend
+    var friend: UserProfile
     
     // Get appropriate rank color
     private func rankColor(for rank: String) -> Color {
@@ -163,7 +164,7 @@ struct FriendCard: View {
         case "Platinum":
             return .purple
         default:
-            return .blue
+            return .brown
         }
     }
     
@@ -192,22 +193,25 @@ struct FriendCard: View {
                     HStack(spacing: 4) {
                         Image(systemName: "shoeprints.fill")
                             .foregroundColor(.blue)
-                        Text(formatNumber(friend.stepCount))
+                        Text(formatNumber(friend.weeklyStepCount))
                             .font(.system(size: 14))
                     }
                     
                     HStack(spacing: 4) {
                         Image(systemName: "crown.fill")
-                            .foregroundColor(rankColor(for: friend.rank))
+                            .foregroundColor(rankColor(for: friend.tier))
 //                        Text(friend.rank)
                             .font(.system(size: 22))
                     }
                     
-                    HStack(spacing: 4) {
-                        Image(systemName: "flame.fill")
-                            .foregroundColor(.red)
-                        Text("\(friend.streak)")
-                            .font(.system(size: 14))
+                    if let streak = friend.streak {
+                        HStack(spacing: 4) {
+                            Image(systemName: "flame.fill")
+                                .foregroundColor(.red)
+                            Text("\(streak)")
+                            //Text("DEBUG: \(String(describing: friend.streak))")
+                                .font(.system(size: 14))
+                        }
                     }
                 }
             }
@@ -315,10 +319,14 @@ struct GroupCard: View {
 }
 
 struct AddFriendView: View {
+    @EnvironmentObject var userDataManager: UserDataManager
     @Environment(\.presentationMode) var presentationMode
-    @State private var friendCode = ""
+    @State private var friendCode = UserDataManager.generateFriendCode()
     @State private var searchQuery = ""
-    
+    @State private var inputCode = ""
+    @State private var successMessage = ""
+    @State private var showSuccessMessage = false
+            
     var body: some View {
         NavigationView {
             VStack(spacing: 25) {
@@ -328,12 +336,22 @@ struct AddFriendView: View {
                         .font(.headline)
                     
                     HStack {
-                        TextField("Enter friend code", text: $friendCode)
+                        TextField("Enter friend code", text: $inputCode)
                             .padding()
                             .background(Color.gray.opacity(0.1))
                             .cornerRadius(10)
                         
-                        Button(action: {}) {
+                        Button(action: {
+                            userDataManager.addFriendByFriendCode(friendCode: inputCode)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                userDataManager.fetchFriendsData()
+                                successMessage = "Friend added successfully!"
+                                showSuccessMessage = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    showSuccessMessage = false
+                                }
+                            }
+                        }) {
                             Text("Add")
                                 .fontWeight(.semibold)
                                 .foregroundColor(.white)
@@ -360,19 +378,19 @@ struct AddFriendView: View {
                 }
                 .padding()
                 
-                // Your code section
                 VStack(spacing: 15) {
                     Text("Your Friend Code")
                         .font(.headline)
                     
-                    Text("STEP-5678-XYZ")
+                    Text(userDataManager.friendCode)
                         .font(.system(size: 20, weight: .bold, design: .monospaced))
                         .padding()
                         .frame(maxWidth: .infinity)
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(10)
                     
-                    Button(action: {}) {
+                    Button(action: {UIPasteboard.general.string = userDataManager.friendCode
+                    }) {
                         HStack {
                             Image(systemName: "square.on.square")
                             Text("Copy Code")
@@ -389,6 +407,9 @@ struct AddFriendView: View {
             .navigationBarItems(trailing: Button("Close") {
                 presentationMode.wrappedValue.dismiss()
             })
+        }
+        .alert("Friend added successfully!", isPresented: $showSuccessMessage) {
+            Button("OK", role: .cancel) { }
         }
     }
 }
