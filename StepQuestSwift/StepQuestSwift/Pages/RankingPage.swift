@@ -5,18 +5,19 @@ import FirebaseAuth
 struct RankingPage: View {
     @EnvironmentObject var authManager: AuthManager
     @EnvironmentObject var userDataManager: UserDataManager
+    @State private var allUsers: [User] = []
 
-    private var allUsers: [User] {
+    private func loadAllUsers() {
         let currentUID = Auth.auth().currentUser?.uid
-        let allProfiles = userDataManager.globalLeaderboardData
+        let profiles = userDataManager.globalLeaderboardData
 
-        return allProfiles.map { profile in
+        self.allUsers = profiles.map { profile in
             User(
                 id: profile.id == currentUID ? "current" : profile.id,
                 name: profile.name,
                 steps: profile.weeklyStepCount,
                 rank: profile.tier,
-                avatarSymbol: profile.avatarSymbol?.isEmpty == false ? profile.avatarSymbol! : "person.crop.circle"
+                avatarImageName: profile.profileImageName ?? "BlueProfile"
             )
         }.sorted { $0.steps > $1.steps }
     }
@@ -26,14 +27,13 @@ struct RankingPage: View {
     }
 
     private var topStepper: User {
-        allUsers.first ?? User(id: "", name: "", steps: 0, rank: "", avatarSymbol: "")
+        allUsers.first ?? User(id: "", name: "", steps: 0, rank: "", avatarImageName: "BlueProfile")
     }
 
     var body: some View {
         NavigationView {
             ZStack {
-                LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.white]),
-                               startPoint: .top, endPoint: .bottom)
+                Color(red: 0.3, green: 0.2, blue: 0.1)
                     .ignoresSafeArea()
 
                 if userDataManager.globalLeaderboardData.isEmpty {
@@ -50,17 +50,18 @@ struct RankingPage: View {
 
                             VStack(alignment: .leading, spacing: 15) {
                                 Text("Weekly Leaderboard")
-                                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                                    .font(.custom("Press Start 2P", size: 14))
+                                    .foregroundColor(Color(red: 0.3, green: 0.2, blue: 0.1))
                                     .padding(.horizontal)
                                 
                                 Text("Showing Top 10")
-                                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                            .foregroundColor(.gray)
-                                            .padding(.horizontal)
+                                    .font(.custom("Press Start 2P", size: 12))
+                                    .foregroundColor(Color(red: 0.3, green: 0.2, blue: 0.1).opacity(0.7))
+                                    .padding(.horizontal)
 
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 20)
-                                        .fill(Color.white)
+                                        .fill(Color(red: 0.87, green: 0.75, blue: 0.6))
                                         .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
 
                                     VStack(spacing: 0) {
@@ -85,8 +86,13 @@ struct RankingPage: View {
             }
             .onAppear {
                 userDataManager.fetchAllUsersForLeaderboard { users in
-                    userDataManager.globalLeaderboardData = users
+                    DispatchQueue.main.async {
+                        userDataManager.globalLeaderboardData = users
+                    }
                 }
+            }
+            .onChange(of: userDataManager.globalLeaderboardData) { _ in
+                loadAllUsers()
             }
             .navigationTitle("Rankings")
             .navigationBarTitleDisplayMode(.inline)
@@ -119,35 +125,38 @@ struct LeaderboardRow: View {
                     .frame(width: 36, height: 36)
                 
                 Text("\(rank)")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .font(.custom("Press Start 2P", size: 10))
                     .foregroundColor(rankColor)
             }
             
             // User avatar
-            Image(systemName: user.avatarSymbol)
-                .font(.system(size: 22))
-                .foregroundColor(isCurrentUser ? .blue : .gray)
+            Image(user.avatarImageName)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
                 .frame(width: 36, height: 36)
-                .background(
+                .clipShape(Circle())
+                .overlay(
                     Circle()
-                        .fill(isCurrentUser ? Color.blue.opacity(0.1) : Color.gray.opacity(0.1))
+                        .stroke(isCurrentUser ? Color(red: 0.3, green: 0.2, blue: 0.1) : Color.gray, lineWidth: 2)
                 )
             
             // User name
             Text(user.name)
-                .font(.system(size: 16, weight: isCurrentUser ? .bold : .medium, design: .rounded))
-                .foregroundColor(isCurrentUser ? .primary : .gray)
+                .font(.custom("Press Start 2P", size: 10))
+                .foregroundColor(isCurrentUser ? Color(red: 0.3, green: 0.2, blue: 0.1) : Color(red: 0.3, green: 0.2, blue: 0.1).opacity(0.7))
+                .fontWeight(isCurrentUser ? .bold : .medium)
             
             Spacer()
             
             // Step count
             Text("\(user.steps.formattedWithCommas)")
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                .foregroundColor(isCurrentUser ? .blue : .gray)
+                .font(.custom("Press Start 2P", size: 10))
+                .foregroundColor(isCurrentUser ? Color(red: 0.3, green: 0.2, blue: 0.1).opacity(0.7) : Color(red: 0.3, green: 0.2, blue: 0.1).opacity(0.7))
+                .fontWeight(.semibold)
         }
         .padding(.vertical, 12)  // Increased vertical padding
         .padding(.horizontal, 16)
-        .background(isCurrentUser ? Color.blue.opacity(0.05) : Color.clear)
+        .background(isCurrentUser ? Color(red: 0.87, green: 0.75, blue: 0.6).opacity(0.5) : Color.clear)
         .cornerRadius(10)
     }
 }
@@ -161,27 +170,28 @@ struct UserRankSection: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white)
+                .fill(Color(red: 0.87, green: 0.75, blue: 0.6))
                 .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
 
             VStack(spacing: 15) {
                 Text("Your Current Ranking")
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                    .foregroundColor(.gray.opacity(0.8))
+                    .font(.custom("Press Start 2P", size: 10))
+                    .foregroundColor(Color(red: 0.3, green: 0.2, blue: 0.1).opacity(0.7))
 
                 HStack(spacing: 15) {
                     Text("#\(rank)")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .foregroundColor(.blue)
+                        .font(.custom("Press Start 2P", size: 16))
+                        .foregroundColor(Color(red: 0.3, green: 0.2, blue: 0.1).opacity(0.7))
 
                     Divider().frame(height: 40)
 
                     VStack(alignment: .leading, spacing: 5) {
                         Text(user.name)
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .font(.custom("Press Start 2P", size: 12))
+                            .foregroundColor(Color(red: 0.3, green: 0.2, blue: 0.1))
                         Text("\(user.steps.formattedWithCommas) steps")
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                            .foregroundColor(.gray)
+                            .font(.custom("Press Start 2P", size: 10))
+                            .foregroundColor(Color(red: 0.3, green: 0.2, blue: 0.1).opacity(0.7))
                     }
 
                     Spacer()
@@ -190,11 +200,11 @@ struct UserRankSection: View {
                         let stepsToNext = allUsers[rank - 2].steps - user.steps
                         VStack(alignment: .trailing, spacing: 5) {
                             Text("\(stepsToNext.formattedWithCommas)")
-                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .font(.custom("Press Start 2P", size: 10))
                                 .foregroundColor(.orange)
                             Text("steps to #\(rank - 1)")
-                                .font(.system(size: 14, weight: .medium, design: .rounded))
-                                .foregroundColor(.gray)
+                                .font(.custom("Press Start 2P", size: 8))
+                                .foregroundColor(Color(red: 0.3, green: 0.2, blue: 0.1).opacity(0.7))
                         }
                     } else {
                         Image(systemName: "crown.fill")
@@ -218,14 +228,14 @@ struct TopUser: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white)
+                .fill(Color(red: 0.87, green: 0.75, blue: 0.6))
                 .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
 
             VStack(spacing: 15) {
                 Text("This Week's Leader")
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
-                    .foregroundColor(.gray.opacity(0.8))
-                    .padding(.bottom, 15)
+                    .font(.custom("Press Start 2P", size: 10))
+                    .foregroundColor(Color(red: 0.3, green: 0.2, blue: 0.1).opacity(0.7))
+                    .padding(.bottom, 10)
 
                 ZStack {
                     Image(systemName: "crown.fill")
@@ -235,31 +245,28 @@ struct TopUser: View {
                         .padding(.top, 5)
 
                     Circle()
-                        .fill(LinearGradient(gradient: Gradient(colors: [.purple, .blue]), startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .fill(Color(red: 0.87, green: 0.75, blue: 0.6))
                         .frame(width: 95, height: 95)
                         .overlay(
-                            Image(systemName: topStepper.avatarSymbol)
+                            Image(topStepper.avatarImageName)
                                 .resizable()
-                                .aspectRatio(contentMode: .fit)
+                                .aspectRatio(contentMode: .fill)
                                 .frame(width: 80, height: 80)
-                                .foregroundColor(.white)
+                                .clipShape(Circle())
                         )
                 }
 
                 Text(topStepper.name)
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.custom("Press Start 2P", size: 12))
+                    .foregroundColor(Color(red: 0.3, green: 0.2, blue: 0.1))
 
                 Text("\(topStepper.steps.formattedWithCommas) steps")
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                    .foregroundColor(.blue)
+                    .font(.custom("Press Start 2P", size: 8))
+                    .foregroundColor(Color(red: 0.3, green: 0.2, blue: 0.1).opacity(0.7))
 
                 Text(topStepper.rank)
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundColor(.purple)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 6)
-                    .background(Color.purple.opacity(0.1))
-                    .cornerRadius(12)
+                    .font(.custom("Press Start 2P", size: 8))
+                    .foregroundColor(Color(red: 0.3, green: 0.2, blue: 0.1).opacity(0.7))
             }
             .padding()
         }
@@ -274,7 +281,7 @@ struct User: Identifiable, Equatable {
     var name: String
     var steps: Int
     var rank: String
-    var avatarSymbol: String
+    var avatarImageName: String
     static func == (lhs: User, rhs: User) -> Bool {
         return lhs.id == rhs.id
     }

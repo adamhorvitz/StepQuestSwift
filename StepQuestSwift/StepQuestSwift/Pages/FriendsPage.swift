@@ -22,9 +22,8 @@ struct FriendsPage: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Background gradient
-                LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.white]),
-                              startPoint: .top, endPoint: .bottom)
+                // Custom dark brown background
+                Color(red: 0.1, green: 0.05, blue: 0.02)
                     .ignoresSafeArea()
                 
                 VStack(spacing: 20) {
@@ -38,20 +37,21 @@ struct FriendsPage: View {
                             withAnimation { selectedTab = 1 }
                         }
                     }
-                    .background(Color.gray.opacity(0.1))
+                    .background(Color(red: 0.1, green: 0.05, blue: 0.02))
                     .cornerRadius(10)
                     .padding(.horizontal)
                     
                     // Search bar
                     HStack {
                         Image(systemName: "magnifyingglass")
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8).opacity(0.7))
                         
                         TextField("Search", text: $searchText)
-                            .font(.system(size: 16))
+                            .font(.custom("Press Start 2P", size: 13))
+                            .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8).opacity(0.7))
                     }
                     .padding()
-                    .background(Color.white)
+                    .background(Color(red: 0.2, green: 0.15, blue: 0.1))
                     .cornerRadius(10)
                     .padding(.horizontal)
                     .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
@@ -141,12 +141,12 @@ struct TabButton: View {
     var body: some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: 16, weight: isSelected ? .bold : .medium))
+                .font(.custom("Press Start 2P", size: 13))
                 .padding(.vertical, 12)
                 .padding(.horizontal, 30)
-                .background(isSelected ? Color.white : Color.clear)
+                .background(isSelected ? Color(red: 0.2, green: 0.15, blue: 0.1) : Color.clear)
                 .cornerRadius(10)
-                .foregroundColor(isSelected ? .blue : .gray)
+                .foregroundColor(isSelected ? Color(red: 1, green: 0.95, blue: 0.8) : Color(red: 1, green: 0.95, blue: 0.8).opacity(0.7))
         }
     }
 }
@@ -173,20 +173,21 @@ struct FriendCard: View {
             // Avatar
             ZStack {
                 Circle()
-                    .fill(Color.gray.opacity(0.1))
+                    .fill(Color.white)
                     .frame(width: 60, height: 60)
-                
-                Image(systemName: "person.crop.circle.fill")
+                    .overlay(Circle().stroke(Color(red: 1, green: 0.95, blue: 0.8), lineWidth: 2))
+                Image(friend.profileImageName ?? "BlueProfile")
                     .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 50, height: 50)
-                    .foregroundColor(.gray)
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 54, height: 54)
+                    .clipShape(Circle())
             }
             
             // Friend info
             VStack(alignment: .leading, spacing: 5) {
                 Text(friend.name)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.custom("Press Start 2P", size: 14))
+                    .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8))
                 
                 HStack(spacing: 10) {
                     // Compact badges
@@ -194,7 +195,8 @@ struct FriendCard: View {
                         Image(systemName: "shoeprints.fill")
                             .foregroundColor(.blue)
                         Text(formatNumber(friend.weeklyStepCount))
-                            .font(.system(size: 14))
+                            .font(.custom("Press Start 2P", size: 10))
+                            .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8).opacity(0.7))
                     }
                     
                     HStack(spacing: 4) {
@@ -209,8 +211,8 @@ struct FriendCard: View {
                             Image(systemName: "flame.fill")
                                 .foregroundColor(.red)
                             Text("\(streak)")
-                            //Text("DEBUG: \(String(describing: friend.streak))")
-                                .font(.system(size: 14))
+                                .font(.custom("Press Start 2P", size: 10))
+                                .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8).opacity(0.7))
                         }
                     }
                 }
@@ -231,7 +233,7 @@ struct FriendCard: View {
             }
         }
         .padding()
-        .background(Color.white)
+        .background(Color(red: 0.2, green: 0.15, blue: 0.1))
         .cornerRadius(15)
         .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
     }
@@ -245,7 +247,8 @@ struct GroupCard: View {
             // Group header
             HStack {
                 Text(group.name)
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.custom("Press Start 2P", size: 14))
+                    .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8))
                 
                 Spacer()
                 
@@ -253,11 +256,11 @@ struct GroupCard: View {
                 Button(action: {}) {
                     HStack(spacing: 5) {
                         Text("View")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.custom("Press Start 2P", size: 10))
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 12))
+                            .font(.custom("Press Start 2P", size: 8))
                     }
-                    .foregroundColor(.blue)
+                    .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8).opacity(0.7))
                 }
             }
             
@@ -268,23 +271,23 @@ struct GroupCard: View {
                 // Members count
                 VStack {
                     Text("\(group.members)")
-                        .font(.system(size: 24, weight: .bold))
+                        .font(.custom("Press Start 2P", size: 18))
                         .foregroundColor(.blue)
                     
                     Text("Members")
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray)
+                        .font(.custom("Press Start 2P", size: 10))
+                        .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8).opacity(0.7))
                 }
                 
                 // Steps count
                 VStack {
                     Text("\(group.totalSteps)")
-                        .font(.system(size: 24, weight: .bold))
+                        .font(.custom("Press Start 2P", size: 18))
                         .foregroundColor(.green)
                     
                     Text("Total Steps")
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray)
+                        .font(.custom("Press Start 2P", size: 10))
+                        .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8).opacity(0.7))
                 }
                 
                 Spacer()
@@ -306,13 +309,14 @@ struct GroupCard: View {
                         .rotationEffect(.degrees(-90))
                     
                     Text("2nd")
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.custom("Press Start 2P", size: 10))
+                        .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8))
                 }
             }
             .padding(.vertical, 5)
         }
         .padding()
-        .background(Color.white)
+        .background(Color(red: 0.2, green: 0.15, blue: 0.1))
         .cornerRadius(15)
         .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
     }
@@ -333,12 +337,14 @@ struct AddFriendView: View {
                 // Friend code section
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Add Friend by Code")
-                        .font(.headline)
+                        .font(.custom("Press Start 2P", size: 13))
+                        .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8))
                     
                     HStack {
                         TextField("Enter friend code", text: $inputCode)
+                            .font(.custom("Press Start 2P", size: 12))
                             .padding()
-                            .background(Color.gray.opacity(0.1))
+                            .background(Color(red: 0.2, green: 0.15, blue: 0.1))
                             .cornerRadius(10)
                         
                         Button(action: {
@@ -353,7 +359,7 @@ struct AddFriendView: View {
                             }
                         }) {
                             Text("Add")
-                                .fontWeight(.semibold)
+                                .font(.custom("Press Start 2P", size: 12))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 15)
@@ -369,25 +375,29 @@ struct AddFriendView: View {
                 // Search section
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Find Friends")
-                        .font(.headline)
+                        .font(.custom("Press Start 2P", size: 13))
+                        .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8))
                     
                     TextField("Search by name or email", text: $searchQuery)
+                        .font(.custom("Press Start 2P", size: 12))
                         .padding()
-                        .background(Color.gray.opacity(0.1))
+                        .background(Color(red: 0.2, green: 0.15, blue: 0.1))
                         .cornerRadius(10)
                 }
                 .padding()
                 
                 VStack(spacing: 15) {
                     Text("Your Friend Code")
-                        .font(.headline)
+                        .font(.custom("Press Start 2P", size: 13))
+                        .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8))
                     
                     Text(userDataManager.friendCode)
-                        .font(.system(size: 20, weight: .bold, design: .monospaced))
+                        .font(.custom("Press Start 2P", size: 16))
                         .padding()
                         .frame(maxWidth: .infinity)
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(10)
+                        .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8))
                     
                     Button(action: {UIPasteboard.general.string = userDataManager.friendCode
                     }) {
@@ -395,8 +405,8 @@ struct AddFriendView: View {
                             Image(systemName: "square.on.square")
                             Text("Copy Code")
                         }
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.blue)
+                        .font(.custom("Press Start 2P", size: 12))
+                        .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8).opacity(0.7))
                     }
                 }
                 .padding()
@@ -423,19 +433,28 @@ struct CreateGroupView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Group Details")) {
+                Section(header: Text("Group Details")
+                    .font(.custom("Press Start 2P", size: 13))
+                    .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8))
+                ) {
                     TextField("Group Name", text: $groupName)
+                        .font(.custom("Press Start 2P", size: 12))
                     
                     Toggle("Public Group", isOn: $isPublic)
                         .toggleStyle(SwitchToggleStyle(tint: .blue))
+                        .font(.custom("Press Start 2P", size: 12))
                     
                     Text("Public groups can be found by anyone. Private groups require an invitation.")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                        .font(.custom("Press Start 2P", size: 10))
+                        .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8).opacity(0.7))
                 }
                 
-                Section(header: Text("Weekly Step Goal")) {
+                Section(header: Text("Weekly Step Goal")
+                    .font(.custom("Press Start 2P", size: 13))
+                    .foregroundColor(Color(red: 1, green: 0.95, blue: 0.8))
+                ) {
                     Stepper("\(weeklyGoal) steps", value: $weeklyGoal, in: 50000...500000, step: 10000)
+                        .font(.custom("Press Start 2P", size: 12))
                 }
                 
                 Section {
@@ -444,7 +463,7 @@ struct CreateGroupView: View {
                         presentationMode.wrappedValue.dismiss()
                     }) {
                         Text("Create Group")
-                            .fontWeight(.bold)
+                            .font(.custom("Press Start 2P", size: 13))
                             .frame(maxWidth: .infinity)
                             .foregroundColor(.white)
                             .padding()
