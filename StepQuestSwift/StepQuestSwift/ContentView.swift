@@ -44,4 +44,7 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(HealthManager())
+        .environmentObject(AuthManager())
+        .environmentObject(UserDataManager())
 }

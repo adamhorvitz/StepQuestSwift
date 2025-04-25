@@ -20,6 +20,8 @@ class UserDataManager: ObservableObject {
     @Published var friendCode: String = ""
     @Published var globalLeaderboardData: [UserProfile] = []
     @Published var avatarSymbol: String = "person.crop.circle"
+    @Published var profileImageName: String = "BlueProfile"
+    @Published var profilePicture: String = "BlueProfile"
     
     func fetchUserData() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
@@ -55,12 +57,19 @@ class UserDataManager: ObservableObject {
                 if data["weeklyStepCount"] == nil { updates["weeklyStepCount"] = 0 }
                 if data["friends"] == nil { updates["friends"] = [] }
                 if data["avatarSymbol"] == nil { updates["avatarSymbol"] = "person.crop.circle" }
+                if data["profileImageName"] == nil { updates["profileImageName"] = "BlueProfile" }
 
                 if !updates.isEmpty {
                     Firestore.firestore().collection("users").document(uid).updateData(updates) { _ in
+                        let fetchedProfileImageName = data["profileImageName"] as? String
+                        self.profileImageName = fetchedProfileImageName ?? "BlueProfile"
+                        self.profilePicture = fetchedProfileImageName ?? "BlueProfile"
                         self.fetchFriendsData()
                     }
                 } else {
+                    let fetchedProfileImageName = data["profileImageName"] as? String
+                    self.profileImageName = fetchedProfileImageName ?? "BlueProfile"
+                    self.profilePicture = fetchedProfileImageName ?? "BlueProfile"
                     self.fetchFriendsData()
                 }
             }
@@ -73,7 +82,8 @@ class UserDataManager: ObservableObject {
         streak: Int? = nil,
         weeklyGoal: Int? = nil,
         weeklyStepCount: Int? = nil,
-        avatarSymbol: String? = nil
+        avatarSymbol: String? = nil,
+        profileImageName: String? = nil
     ) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
 
@@ -84,6 +94,12 @@ class UserDataManager: ObservableObject {
         if let weeklyGoal = weeklyGoal { updates["weeklyGoal"] = weeklyGoal }
         if let weeklyStepCount = weeklyStepCount { updates["weeklyStepCount"] = weeklyStepCount }
         if let avatarSymbol = avatarSymbol { updates["avatarSymbol"] = avatarSymbol }
+        if let profileImageName = profileImageName {
+            updates["profileImageName"] = profileImageName
+            self.profileImageName = profileImageName
+            self.profilePicture = profileImageName
+            self.objectWillChange.send()
+        }
 
         Firestore.firestore().collection("users").document(uid).updateData(updates) { error in
             if let error = error {
@@ -91,6 +107,13 @@ class UserDataManager: ObservableObject {
             } else {
                 print("User data updated successfully")
                 self.fetchUserData() // refresh local copy
+
+                self.fetchAllUsersForLeaderboard { profiles in
+                    DispatchQueue.main.async {
+                        self.globalLeaderboardData = profiles
+                        self.objectWillChange.send()
+                    }
+                }
             }
         }
     }
@@ -112,7 +135,8 @@ class UserDataManager: ObservableObject {
                     tier: data["tier"] as? String ?? "Bronze",
                     weeklyStepCount: data["weeklyStepCount"] as? Int ?? 0,
                     streak: data["streak"] as? Int ?? 0,
-                    avatarSymbol: data["avatarSymbol"] as? String
+                    avatarSymbol: data["avatarSymbol"] as? String,
+                    profileImageName: data["profileImageName"] as? String ?? "BlueProfile"
                 )
 
                 DispatchQueue.main.async {
@@ -204,7 +228,8 @@ class UserDataManager: ObservableObject {
                     tier: data["tier"] as? String ?? "Bronze",
                     weeklyStepCount: data["weeklyStepCount"] as? Int ?? 0,
                     streak: data["streak"] as? Int ?? 0,
-                    avatarSymbol: data["avatarSymbol"] as? String
+                    avatarSymbol: data["avatarSymbol"] as? String,
+                    profileImageName: data["profileImageName"] as? String ?? "BlueProfile"
                 )
             }
 
@@ -215,12 +240,12 @@ class UserDataManager: ObservableObject {
     }
 }
 
-struct UserProfile: Identifiable {
+struct UserProfile: Identifiable, Equatable {
     var id: String // uid
     var name: String
     var tier: String
     var weeklyStepCount: Int
     var streak: Int?
     var avatarSymbol: String?
+    var profileImageName: String?
 }
-

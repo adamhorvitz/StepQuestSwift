@@ -13,72 +13,109 @@ struct LoginPage: View {
     @State private var email = ""
     @State private var password = ""
     @State private var name = ""
-    @State private var isLoginMode = false
+    @State private var isLoginMode = true
     @State private var errorMessage: String?
+    @State private var showSplash = true
     @EnvironmentObject var authManager: AuthManager
     
     var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing:20) {
-                    Picker(selection: $isLoginMode, label:
-                            Text("Picker here")) {
-                        Text("Login")
-                            .tag(true)
-                        Text("Create Account")
-                            .tag(false)
-                    }.pickerStyle(SegmentedPickerStyle())
-                        .onChange(of: isLoginMode) {
-                            errorMessage = nil
-                        }
-                    
-                    if !isLoginMode {
-                        TextField("Name", text: $name)
-                            .autocapitalization(.words)
-                            .padding(12)
-                            .background(Color.white)
-                    }
+        ZStack {
+            if showSplash {
+                SplashScreen(showSplash: $showSplash)
+            } else {
+                NavigationView {
+                    ZStack {
+                        Image("LoginBackground")
+                            .resizable()
+                            .scaledToFill()
+                            .ignoresSafeArea()
 
-                    TextField("Email", text: $email)
-                        .keyboardType(.emailAddress)
-                        .autocapitalization(.none)
-                        .padding(12)
-                        .background(Color.white)
-                    
-                    SecureField("Password", text: $password)
-                        .padding(12)
-                        .background(Color.white)
-                    
-                    if let errorMessage = errorMessage {
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                            .multilineTextAlignment(.center)
-                    }
+                        VStack(spacing: 10) {
+                            VStack(spacing: 15) {
+                                Image("Logo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 350, height: 350)
+                                
+                                Text(isLoginMode ? "Log in" : "Create Account")
+                                    .font(.custom("Press Start 2P", size: 18))
+                                    .foregroundColor(.white)
+                                
+                                Picker(selection: $isLoginMode, label:
+                                        Text("Picker here")) {
+                                    Text("Login")
+                                        .tag(true)
+                                    Text("Create Account")
+                                        .tag(false)
+                                }
+                                .font(.custom("Press Start 2P", size: 12))
+                                .pickerStyle(SegmentedPickerStyle())
+                                .background(Color.white)
+                                .cornerRadius(10)
+                                .frame(maxWidth: 350)
+                                .onChange(of: isLoginMode) {
+                                    errorMessage = nil
+                                }
+                                if !isLoginMode {
+                                    TextField("Name", text: $name)
+                                        .font(.custom("Press Start 2P", size: 12))
+                                        .autocapitalization(.words)
+                                        .padding(12)
+                                        .background(Color.white)
+                                        .frame(maxWidth: 350)
+                                        .foregroundColor(.black)
+                                }
+                                
 
-                    
-                    Button {
-                        handleAction()
-                    } label: {
-                        HStack {
-                            Spacer()
-                            Text(isLoginMode ? "Log in" : "Create Account")
-                                .foregroundColor(.white)
-                                .padding(.vertical, 10)
-                                .font(.system(size: 20, weight: .semibold))
-                            Spacer()
+                                TextField("Email", text: $email)
+                                    .font(.custom("Press Start 2P", size: 12))
+                                    .keyboardType(.emailAddress)
+                                    .autocapitalization(.none)
+                                    .padding(12)
+                                    .background(Color.white)
+                                    .frame(maxWidth: 350)
+                                    .foregroundColor(.black)
+                                
+                                SecureField("Password", text: $password)
+                                    .font(.custom("Press Start 2P", size: 12))
+                                    .padding(12)
+                                    .background(Color.white)
+                                    .frame(maxWidth: 350)
+                                    .foregroundColor(.black)
+                                
+                                if let errorMessage = errorMessage {
+                                    Text(errorMessage)
+                                        .font(.custom("Press Start 2P", size: 12))
+                                        .foregroundColor(.red)
+                                        .multilineTextAlignment(.center)
+                                }
+
+                                
+                                Button {
+                                    handleAction()
+                                } label: {
+                                    HStack {
+                                        Spacer()
+                                        Text(isLoginMode ? "Log in" : "Create Account")
+                                            .font(.custom("Press Start 2P", size: 14))
+                                            .foregroundColor(.white)
+                                            .padding(.vertical, 10)
+                                        Spacer()
+                                    }
+                                    .frame(maxWidth: 350)
+                                    .background(Color.blue)
+                                    .cornerRadius(10)
+                                }
+                            }
+                            .padding()
                         }
-                        .frame(maxWidth: .infinity)
-                            .background(Color.blue)
-                            .cornerRadius(10)
+                        .frame(maxHeight: .infinity, alignment: .topLeading)
+                        .animation(.none, value: isLoginMode)
                     }
+                    .navigationTitle("")
                 }
-                .padding()
             }
-            .navigationTitle(isLoginMode ? "Log in" : "Create Account")
-            .background(Color(.init(white:0, alpha: 0.05))
-                .ignoresSafeArea())
         }
-        
     }
     private func handleAction() {
         errorMessage = nil //clears old erros
@@ -176,6 +213,57 @@ struct LoginPage: View {
         }
     }
 
+}
+
+struct SplashScreen: View {
+    @Binding var showSplash: Bool
+    @State private var showLogo = false
+    @State private var fadeOut = false
+    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.scenePhase) var scenePhase
+    @EnvironmentObject var authManager: AuthManager
+    
+    var body: some View {
+        ZStack {
+            Color.black
+                .ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                Text("Welcome To:")
+                    .font(.custom("Press Start 2P", size: 28))
+                    .foregroundColor(.white)
+                    .opacity(showLogo ? 1 : 0)
+
+                if showLogo {
+                    Image("Logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 350, height: 350)
+                        .transition(.scale)
+                }
+            }
+            .onAppear {
+                withAnimation(.easeInOut(duration: 1.5)) {
+                    showLogo = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                    withAnimation {
+                        fadeOut = true
+                    }
+                }
+            }
+        }
+        .opacity(fadeOut ? 0 : 1)
+        .onChange(of: fadeOut) {
+            if fadeOut {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    withAnimation {
+                        showSplash = false
+                    }
+                }
+            }
+        }
+    }
 }
 
 struct ContentView_Preview1: PreviewProvider {

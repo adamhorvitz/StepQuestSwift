@@ -40,20 +40,31 @@ class HealthManager: ObservableObject {
             quantitySamplePredicate: predicate,
             options: .cumulativeSum
         ) { [weak self] _, result, error in
-            guard let self = self,
-                  let result = result,
-                  let sum = result.sumQuantity() else {
-                print("Failed to fetch steps: \(error?.localizedDescription ?? "N/A")")
+            guard let self = self else {
+                print("HealthManager: self is nil.")
                 return
             }
 
-            //explicitly hop to main actor
+            if let error = error {
+                print("HealthKit query error: \(error.localizedDescription)")
+                return
+            }
+
+            guard let result = result, let sum = result.sumQuantity() else {
+                print("HealthKit query returned no results.")
+                return
+            }
+
+            // Explicitly hop to main actor
             Task { @MainActor in
-                self.stepCount = sum.doubleValue(for: .count())
-                print("Stepcount retrieved from health manager: \(self.stepCount)")
-                
-                //save users stepcount to firestore
-                UserDataManager().updateUserData(weeklyStepCount: Int(self.stepCount))
+                let steps = sum.doubleValue(for: .count())
+                self.stepCount = steps
+                print("Step count retrieved from HealthKit: \(steps)")
+
+                // Attempt to update Firestore and confirm execution
+                let userDataManager = UserDataManager()
+                userDataManager.updateUserData(weeklyStepCount: Int(steps))
+                print("Attempted to update user data in Firestore with step count: \(Int(steps))")
             }
         }
         

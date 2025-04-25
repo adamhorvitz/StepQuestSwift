@@ -36,9 +36,22 @@
 		E86381F22D7B7CED00494371 /* StepQuestSwiftUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StepQuestSwiftUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		545221DB2DB9C03F0009D9F9 /* Exceptions for "StepQuestSwift" folder in "StepQuestSwift" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = E86381D72D7B7CEB00494371 /* StepQuestSwift */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E86381DA2D7B7CEB00494371 /* StepQuestSwift */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				545221DB2DB9C03F0009D9F9 /* Exceptions for "StepQuestSwift" folder in "StepQuestSwift" target */,
+			);
 			path = StepQuestSwift;
 			sourceTree = "<group>";
 		};
@@ -423,9 +436,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"StepQuestSwift/Preview Content\"";
-				DEVELOPMENT_TEAM = S7APQ7X8J6;
+				DEVELOPMENT_TEAM = BQ38996P67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StepQuestSwift/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Please allow access to enjoy all the features in our application.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Please allow access to enjoy all the features in our application.";
@@ -440,7 +454,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = Adam.StepQuestSwift;
+				PRODUCT_BUNDLE_IDENTIFIER = com.corywhite.StepQuestSwift;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -457,9 +471,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"StepQuestSwift/Preview Content\"";
-				DEVELOPMENT_TEAM = S7APQ7X8J6;
+				DEVELOPMENT_TEAM = BQ38996P67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StepQuestSwift/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Please allow access to enjoy all the features in our application.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Please allow access to enjoy all the features in our application.";
@@ -474,7 +489,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = Adam.StepQuestSwift;
+				PRODUCT_BUNDLE_IDENTIFIER = com.corywhite.StepQuestSwift;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
